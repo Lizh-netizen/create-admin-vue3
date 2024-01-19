@@ -5,6 +5,28 @@
   "version": "0.2.0",
   "configurations": [
     {
+      "name": "Launch via NPM",
+      "request": "launch",
+      "runtimeArgs": ["init", "vue-template", "test", "--", "--template"],
+      "runtimeExecutable": "npm",
+      "skipFiles": ["<node_internals>/**"],
+      "type": "node",
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen",
+      "runtimeVersion": "18.19.0"
+    },
+    {
+      "name": "Launch via npx",
+      "request": "launch",
+      "runtimeArgs": ["create-vue-template", "test", "--template"],
+      "runtimeExecutable": "npx",
+      "skipFiles": ["<node_internals>/**"],
+      "type": "node",
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen",
+      "runtimeVersion": "18.19.0"
+    },
+    {
       "type": "node",
       "request": "launch",
       "name": "启动程序",

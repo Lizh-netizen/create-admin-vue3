@@ -4,6 +4,10 @@ import fse from 'fs-extra'
 import path from 'path'
 import _ from 'lodash'
 import ejs from 'ejs'
+import minimist from 'minimist'
+import _jiti from 'jiti'
+
+const jiti = _jiti(__filename)
 
 prompts.override({ cancelled: true })
 
@@ -13,7 +17,50 @@ const onCancel = () => {
   // return false
 }
 
+function isValidPackageName(projectName) {
+  return /^(?:@[a-z0-9-*~][a-z0-9-*._~]*\/)?[a-z0-9-~][a-z0-9-._~]*$/.test(projectName)
+}
+
+function isSkippedFile(filePath) {
+  return ['.data.ts', '.ejs'].some((o) => filePath.endsWith(o))
+}
+
 async function init() {
+  const argv = minimist(process.argv.slice(2), {
+    alias: {
+      template: ['t']
+    }
+  })
+  // console.log('🚀 ~ init ~ argv:', argv)
+  const pkg = argv._[0]
+  if (isValidPackageName(pkg)) {
+    argv.pkgName = pkg
+    // 初始化模板
+    // 加入对argv的校验，template参数
+    if (argv.template) {
+      const defaultConfig = {
+        pkgName: pkg,
+        config: ['router', 'layout'],
+        css: argv.css || 'unocss',
+        electron: argv.electron !== undefined ? argv.electron : false,
+        pwa: argv.pwa !== undefined && !argv.electron ? argv.pwa : false,
+        cdn: argv.cdn !== undefined ? argv.cdn : false
+      }
+      await processTemplates(defaultConfig)
+      process.exit()
+    }
+  } else {
+    // 给用户一个友好的提示，提示输入的项目名称不符合npm包规则
+    if (pkg || Object.keys(argv).length > 0) {
+      console.log('CLI参数有误，请重新执行CLI，并核对参数，或者直接使用CLI的交互命令初始化！')
+      process.exit()
+    }
+  }
+
+  // console.log('🚀 ~ init ~ argv:', argv)
+  // 综合minimist与prompts 参数传递
+  prompts.override(argv)
+
   const response = await prompts(
     [
       {
@@ -22,9 +69,7 @@ async function init() {
         message: '请输入项目的名称',
         // 对用于的目录名加入校验 校验是不是中文字符等
         validate: (value) =>
-          !/^(?:@[a-z0-9-*~][a-z0-9-*._~]*\/)?[a-z0-9-~][a-z0-9-._~]*$/.test(value)
-            ? `项目名称不符合npm包规则，建议请使用英文小写加短横线`
-            : true
+          !isValidPackageName(value) ? `项目名称不符合npm包规则，建议请使用英文小写加短横线` : true
       },
       {
         type: 'multiselect',
@@ -89,10 +134,6 @@ async function init() {
   )
   // console.log(response) // => { value: 24 }
   await processTemplates(response)
-}
-
-const isSkippedFile = (filePath) => {
-  return ['.data.ts', '.ejs'].some((o) => filePath.endsWith(o))
 }
 
 async function checkAndPrompt(destDir) {
@@ -191,8 +232,8 @@ async function processTemplates(options) {
               fse.writeJSONSync(destPath, dest)
             } else if (curPath.endsWith('.data.ts')) {
               // .data.ts的场景 -> 需要找到去掉data的 生成的原base目录 中的对应的文件，使用ejs，来render .data.ts 中的getData默认函数，响应回来的对象
-              const getData = await import(curPath)
-              const data = getData()
+              const module = await jiti(curPath)
+              const data = module.default()
               if (mapData[relativePath] && mapData[relativePath].data) {
                 // 已经有.data.ts的文件，需要优化相同目标的文件
                 const originData = { ...mapData[relativePath].data }

@@ -1,18 +1,18 @@
 {
   "name": "create-vue-template",
-  "version": "1.0.0",
-  "description": "",
+  "version": "0.2.6",
+  "description": "A CLI for create vue-admin template",
   "keywords": [],
-  "author": "",
+  "author": "brian <admin@wayearn.com>",
   "bin": {
-    "create-vp": "dist/index.cjs"
+    "create-vue-template": "dist/index.cjs"
   },
   "packageManager": "pnpm@8.11.0",
   "license": "MIT",
   "sideEffects": false,
   "files": [
     "dist",
-    "template"
+    "templates"
   ],
   "scripts": {
     "start": "tsx src/index.ts",
@@ -51,7 +51,13 @@
   "dependencies": {
     "ejs": "^3.1.9",
     "fs-extra": "^11.2.0",
+    "jiti": "^1.21.0",
     "lodash": "^4.17.21",
+    "minimist": "^1.2.8",
     "prompts": "^2.4.2"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/toimc/create-vue-template.git"
   }
 }
